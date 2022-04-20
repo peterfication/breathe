@@ -13,7 +13,9 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "breathe",
 	Short: "Guidance in briefing",
-	Long:  `A tool that helps you in breathing certain ways.`,
+	Long: `A tool that helps you in breathing certain ways.
+
+Always inhale through the nose!`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

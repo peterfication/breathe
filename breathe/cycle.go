@@ -1,10 +1,14 @@
 package breathe
 
 import (
+	"embed"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
+	"github.com/faiface/beep/speaker"
 	ui "github.com/gizak/termui/v3"
 	"github.com/gizak/termui/v3/widgets"
 )
@@ -34,8 +38,10 @@ func RunBreatheCycles(title string, cycles []BreatheCycle) {
 
 	gaugeChart := initGaugeChart()
 	textBox := initTextBox()
+	renderText := createRenderText(textBox, title, cycles)
+	playSound := initSpeaker()
 
-	go runBreatheCycles(cycles, gaugeChart, createRenderText(textBox, title, cycles))
+	go runBreatheCycles(cycles, gaugeChart, renderText, playSound)
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
@@ -72,7 +78,9 @@ func initTextBox() *widgets.Paragraph {
 // The closure that refreshes the text box by re-rendering it
 func createRenderText(textBox *widgets.Paragraph, title string, cycles []BreatheCycle) func(currentCycleCount int) {
 	return func(currentCycleCount int) {
-		text := fmt.Sprintf(`%s
+		text := fmt.Sprintf(`Always inhale through the nose!
+
+%s
 Total duration: %s
 Cycle %d of %d
 `, title, totalDuration(cycles), currentCycleCount, len(cycles))
@@ -95,17 +103,17 @@ func totalDuration(cycles []BreatheCycle) time.Duration {
 }
 
 // Run the breath cycles
-func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int)) {
+func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int), playSound func(soundName string)) {
 	for i, cycle := range cycles {
 		renderText(i + 1)
-		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart)
+		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart, playSound)
 		if cycle.InhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.InhaleHold, gaugeChart)
+			runBreatheSubCycle("Hold", cycle.InhaleHold, gaugeChart, playSound)
 		}
 
-		runBreatheSubCycle("Exhale", cycle.Exhale, gaugeChart)
+		runBreatheSubCycle("Exhale", cycle.Exhale, gaugeChart, playSound)
 		if cycle.ExhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.ExhaleHold, gaugeChart)
+			runBreatheSubCycle("Hold", cycle.ExhaleHold, gaugeChart, playSound)
 		}
 	}
 }
@@ -113,8 +121,9 @@ func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge, renderTe
 // Run a single breath sub cycle like an inhale or an exhale step
 // by waiting the appropriate time and printing information about
 // how long is still to go.
-func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart *widgets.Gauge) {
+func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart *widgets.Gauge, playSound func(soundName string)) {
 	gaugeChart.Label = fmt.Sprintf("%s for %.1f seconds", subCycleWord, float64(duration.Milliseconds())/1000)
+	playSound(subCycleWord)
 	switch subCycleWord {
 	case "Inhale":
 		gaugeChart.BarColor = ui.ColorGreen
@@ -129,8 +138,93 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 	for i := int(duration.Milliseconds() / 100); i > 0; i-- {
 		time.Sleep(100 * time.Millisecond)
 
+		// Don't play the sound for the first second of a new step
+		// because the step word is played then
+		firstSecond := int(duration.Milliseconds()/100) - 10 - int(duration.Milliseconds()/100)%10 + 1
+		if i < firstSecond && i%10 == 0 {
+			playSound(fmt.Sprintf("%d", i/10))
+		}
+
 		percentage := int(100 - float64(i)/float64(duration.Milliseconds()/100)*100)
 		gaugeChart.Percent = percentage
 		ui.Render(gaugeChart)
 	}
+}
+
+// Returns a function to play the predefined sounds
+// by specifying the soundName
+func initSpeaker() func(soundName string) {
+	inhaleStreamer, format := initStreamer("inhale.mp3")
+	exhaleStreamer, _ := initStreamer("exhale.mp3")
+	holdStreamer, _ := initStreamer("hold.mp3")
+	oneStreamer, _ := initStreamer("1.mp3")
+	twoStreamer, _ := initStreamer("2.mp3")
+	threeStreamer, _ := initStreamer("3.mp3")
+	fourStreamer, _ := initStreamer("4.mp3")
+	fiveStreamer, _ := initStreamer("5.mp3")
+	sixStreamer, _ := initStreamer("6.mp3")
+	sevenStreamer, _ := initStreamer("7.mp3")
+	eightStreamer, _ := initStreamer("8.mp3")
+	nineStreamer, _ := initStreamer("9.mp3")
+
+	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
+
+	return func(soundName string) {
+		switch soundName {
+		case "Inhale":
+			speaker.Play(inhaleStreamer)
+			defer inhaleStreamer.Seek(0)
+		case "Exhale":
+			speaker.Play(exhaleStreamer)
+			defer exhaleStreamer.Seek(0)
+		case "Hold":
+			speaker.Play(holdStreamer)
+			defer holdStreamer.Seek(0)
+		case "1":
+			speaker.Play(oneStreamer)
+			defer oneStreamer.Seek(0)
+		case "2":
+			speaker.Play(twoStreamer)
+			defer twoStreamer.Seek(0)
+		case "3":
+			speaker.Play(threeStreamer)
+			defer threeStreamer.Seek(0)
+		case "4":
+			speaker.Play(fourStreamer)
+			defer fourStreamer.Seek(0)
+		case "5":
+			speaker.Play(fiveStreamer)
+			defer fiveStreamer.Seek(0)
+		case "6":
+			speaker.Play(sixStreamer)
+			defer sixStreamer.Seek(0)
+		case "7":
+			speaker.Play(sevenStreamer)
+			defer sevenStreamer.Seek(0)
+		case "8":
+			speaker.Play(eightStreamer)
+			defer eightStreamer.Seek(0)
+		case "9":
+			speaker.Play(nineStreamer)
+			defer nineStreamer.Seek(0)
+		}
+	}
+}
+
+//go:embed "assets/*.mp3"
+var assets embed.FS
+
+// Initializes a streamer for the given file under the assets folder
+func initStreamer(fileName string) (beep.StreamSeekCloser, beep.Format) {
+	inhaleFile, err := assets.Open(fmt.Sprintf("assets/%s", fileName))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	inhaleStreamer, format, err := mp3.Decode(inhaleFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return inhaleStreamer, format
 }
