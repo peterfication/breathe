@@ -26,7 +26,7 @@ var longCmd = &cobra.Command{
 	Long:  `Start short and increase to longer breaths.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		breathe.RunBreatheCycles(
-			fmt.Sprintf("Long breathing training from %d to %d with %d cycles", inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
+			fmt.Sprintf("Long breathing training from %d seconds to %d seconds with %d cycles", inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
 			generateCycles(inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
 		)
 	},

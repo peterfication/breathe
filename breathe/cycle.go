@@ -32,20 +32,10 @@ func RunBreatheCycles(title string, cycles []BreatheCycle) {
 	}
 	defer ui.Close()
 
-	termWidth, termHeight := ui.TerminalDimensions()
+	gaugeChart := initGaugeChart()
+	textBox := initTextBox()
 
-	gaugeChart := widgets.NewGauge()
-	gaugeChart.Title = fmt.Sprintf("%s (total duration: %s)", title, TotalDuration(cycles))
-	gaugeChart.SetRect(0, 0, termWidth, termHeight)
-	gaugeChart.Percent = 0
-	gaugeChart.BarColor = ui.ColorGreen
-	gaugeChart.BorderStyle.Fg = ui.ColorWhite
-	gaugeChart.TitleStyle.Fg = ui.ColorCyan
-	gaugeChart.Label = "Inhale"
-
-	ui.Render(gaugeChart)
-
-	go runBreatheCycles(cycles, gaugeChart)
+	go runBreatheCycles(cycles, gaugeChart, createRenderText(textBox, title, cycles))
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
@@ -54,9 +44,60 @@ func RunBreatheCycles(title string, cycles []BreatheCycle) {
 	}
 }
 
-// Run the breath cycles
-func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge) {
+// The gauge chart that displays the breathing action to perform
+func initGaugeChart() *widgets.Gauge {
+	termWidth, termHeight := ui.TerminalDimensions()
+	gaugeChart := widgets.NewGauge()
+	gaugeChart.SetRect(0, 0, termWidth, termHeight-10)
+	gaugeChart.Percent = 0
+	gaugeChart.BarColor = ui.ColorGreen
+	gaugeChart.BorderStyle.Fg = ui.ColorWhite
+	gaugeChart.TitleStyle.Fg = ui.ColorCyan
+
+	ui.Render(gaugeChart)
+	return gaugeChart
+}
+
+// The text box that holds additional information about the breathing cycles
+func initTextBox() *widgets.Paragraph {
+	termWidth, termHeight := ui.TerminalDimensions()
+	paragraph := widgets.NewParagraph()
+	paragraph.SetRect(0, termHeight-10, termWidth, termHeight)
+	paragraph.Text = "Breathe"
+
+	ui.Render(paragraph)
+	return paragraph
+}
+
+// The closure that refreshes the text box by re-rendering it
+func createRenderText(textBox *widgets.Paragraph, title string, cycles []BreatheCycle) func(currentCycleCount int) {
+	return func(currentCycleCount int) {
+		text := fmt.Sprintf(`%s
+Total duration: %s
+Cycle %d of %d
+`, title, totalDuration(cycles), currentCycleCount, len(cycles))
+		textBox.Text = text
+		ui.Render(textBox)
+	}
+}
+
+// Sum up the duration of all steps in all cycles
+func totalDuration(cycles []BreatheCycle) time.Duration {
+	totalDurationMilliseconds := int64(0)
 	for _, cycle := range cycles {
+		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
+			cycle.InhaleHold.Milliseconds() +
+			cycle.Exhale.Milliseconds() +
+			cycle.ExhaleHold.Milliseconds()
+	}
+
+	return time.Duration(totalDurationMilliseconds) * time.Millisecond
+}
+
+// Run the breath cycles
+func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int)) {
+	for i, cycle := range cycles {
+		renderText(i + 1)
 		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart)
 		if cycle.InhaleHold.Milliseconds() > 0 {
 			runBreatheSubCycle("Hold", cycle.InhaleHold, gaugeChart)
@@ -92,16 +133,4 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 		gaugeChart.Percent = percentage
 		ui.Render(gaugeChart)
 	}
-}
-
-func TotalDuration(cycles []BreatheCycle) time.Duration {
-	totalDurationMilliseconds := int64(0)
-	for _, cycle := range cycles {
-		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
-			cycle.InhaleHold.Milliseconds() +
-			cycle.Exhale.Milliseconds() +
-			cycle.ExhaleHold.Milliseconds()
-	}
-
-	return time.Duration(totalDurationMilliseconds) * time.Millisecond
 }
