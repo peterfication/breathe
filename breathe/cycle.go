@@ -8,20 +8,27 @@ import (
 // A BreatheCycle represents full cycle of breathing consisting of
 // an inhale and an exhale
 type BreatheCycle struct {
-	Inhale time.Duration
-	Exhale time.Duration
+	Inhale     time.Duration
+	InhaleHold time.Duration
+	Exhale     time.Duration
+	ExhaleHold time.Duration
 }
 
 // Display information about the breath cycles and run them
 func RunBreatheCycles(cycle BreatheCycle, cyclesCount int) {
-	fmt.Printf(
-		"%d cycles with %.1f seconds inhale followed by %.1f seconds exhale.\n",
-		cyclesCount,
-		float64(cycle.Inhale.Milliseconds())/1000,
-		float64(cycle.Exhale.Milliseconds())/1000,
-	)
-	totalDuration := time.Duration(cyclesCount*int((cycle.Inhale+cycle.Exhale).Milliseconds())) * time.Millisecond
-	fmt.Printf("Total duration: %s\n", totalDuration)
+	totalDuration := time.Duration(cyclesCount*int((cycle.Inhale+cycle.InhaleHold+cycle.Exhale+cycle.ExhaleHold).Milliseconds())) * time.Millisecond
+	fmt.Printf("%d breathing cycles with a total duration of %s\n", cyclesCount, totalDuration)
+
+	fmt.Println("Each cycle consists of:")
+	fmt.Printf("%.1f seconds inhale\n", float64(cycle.Inhale.Milliseconds())/1000)
+	if cycle.InhaleHold.Milliseconds() > 0 {
+		fmt.Printf("%.1f seconds hold\n", float64(cycle.InhaleHold.Milliseconds())/1000)
+	}
+	fmt.Printf("%.1f seconds exhale\n", float64(cycle.Exhale.Milliseconds())/1000)
+	if cycle.ExhaleHold.Milliseconds() > 0 {
+		fmt.Printf("%.1f seconds hold\n", float64(cycle.ExhaleHold.Milliseconds())/1000)
+	}
+
 	fmt.Println("")
 
 	time.Sleep(1 * time.Second)
@@ -36,7 +43,14 @@ func RunBreatheCycles(cycle BreatheCycle, cyclesCount int) {
 // Run a single breath cycle consisting of an inhale and an exhale step
 func runBreatheCycle(cycle BreatheCycle) {
 	runBreatheSubCycle("Inhale", cycle.Inhale)
+	if cycle.InhaleHold.Milliseconds() > 0 {
+		runBreatheSubCycle("Hold", cycle.InhaleHold)
+	}
+
 	runBreatheSubCycle("Exhale", cycle.Exhale)
+	if cycle.ExhaleHold.Milliseconds() > 0 {
+		runBreatheSubCycle("Hold", cycle.ExhaleHold)
+	}
 }
 
 // Run a single breath sub cycle like an inhale or an exhale step
