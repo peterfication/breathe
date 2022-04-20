@@ -25,18 +25,10 @@ var longCmd = &cobra.Command{
 	Short: "Train long breathing",
 	Long:  `Start short and increase to longer breaths.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Starting long breathing cycle")
-		fmt.Println("")
-
-		cycles := generateCycles(inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds)
-
-		fmt.Printf("%d breathing cycles with a total duration of %s\n", len(cycles), breathe.TotalDuration(cycles))
-
-		for i, cycle := range cycles {
-			fmt.Printf("Cycle %d of %d\n", i, len(cycles))
-			breathe.RunBreatheCycle(cycle)
-			fmt.Println()
-		}
+		breathe.RunBreatheCycles(
+			fmt.Sprintf("Long breathing training from %d to %d with %d cycles", inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
+			generateCycles(inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
+		)
 	},
 }
 

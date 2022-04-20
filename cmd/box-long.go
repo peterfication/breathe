@@ -5,7 +5,6 @@ Copyright © 2022 Peter Gundel <mail@petergundel.de>
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"breathe/breathe"
@@ -22,17 +21,17 @@ var boxLongCmd = &cobra.Command{
 It consists of 4 seconds inhale and 6 seconds exhale and 2 seconds holding
 your breath in between.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Starting long box breathing cycle")
-		fmt.Println("")
-
 		breathe.RunBreatheCycles(
-			breathe.BreatheCycle{
-				Inhale:     4000 * time.Millisecond,
-				InhaleHold: 4000 * time.Millisecond,
-				Exhale:     6000 * time.Millisecond,
-				ExhaleHold: 2000 * time.Millisecond,
-			},
-			20,
+			"Box breathe cycle (4-4-6-2)",
+			breathe.GenerateBreatheCycles(
+				breathe.BreatheCycle{
+					Inhale:     4000 * time.Millisecond,
+					InhaleHold: 4000 * time.Millisecond,
+					Exhale:     6000 * time.Millisecond,
+					ExhaleHold: 2000 * time.Millisecond,
+				},
+				20,
+			),
 		)
 	},
 }

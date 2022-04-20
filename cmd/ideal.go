@@ -24,11 +24,14 @@ var idealCmd = &cobra.Command{
 		fmt.Println("")
 
 		breathe.RunBreatheCycles(
-			breathe.BreatheCycle{
-				Inhale: 5500 * time.Millisecond,
-				Exhale: 5500 * time.Millisecond,
-			},
-			55,
+			"Ideal breath cycle: 5.5 seconds inhale and 5.5 seconds exhale",
+			breathe.GenerateBreatheCycles(
+				breathe.BreatheCycle{
+					Inhale: 5500 * time.Millisecond,
+					Exhale: 5500 * time.Millisecond,
+				},
+				55,
+			),
 		)
 	},
 }

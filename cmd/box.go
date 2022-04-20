@@ -26,13 +26,16 @@ your breath in between.`,
 		fmt.Println("")
 
 		breathe.RunBreatheCycles(
-			breathe.BreatheCycle{
-				Inhale:     4000 * time.Millisecond,
-				InhaleHold: 4000 * time.Millisecond,
-				Exhale:     4000 * time.Millisecond,
-				ExhaleHold: 4000 * time.Millisecond,
-			},
-			20,
+			"Box breathe cycle (4x4s)",
+			breathe.GenerateBreatheCycles(
+				breathe.BreatheCycle{
+					Inhale:     4000 * time.Millisecond,
+					InhaleHold: 4000 * time.Millisecond,
+					Exhale:     4000 * time.Millisecond,
+					ExhaleHold: 4000 * time.Millisecond,
+				},
+				20,
+			),
 		)
 	},
 }

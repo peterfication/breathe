@@ -2,7 +2,11 @@ package breathe
 
 import (
 	"fmt"
+	"log"
 	"time"
+
+	ui "github.com/gizak/termui/v3"
+	"github.com/gizak/termui/v3/widgets"
 )
 
 // A BreatheCycle represents full cycle of breathing consisting of
@@ -14,62 +18,80 @@ type BreatheCycle struct {
 	ExhaleHold time.Duration
 }
 
-// Display information about the breath cycles and run them
-func RunBreatheCycles(cycle BreatheCycle, cyclesCount int) {
-	var cycles = []BreatheCycle{}
+func GenerateBreatheCycles(cycle BreatheCycle, cyclesCount int) (cycles []BreatheCycle) {
 	for i := 0; i < cyclesCount; i++ {
 		cycles = append(cycles, cycle)
 	}
-	fmt.Printf("%d breathing cycles with a total duration of %s\n", cyclesCount, TotalDuration(cycles))
+	return cycles
+}
 
-	fmt.Println("Each cycle consists of:")
-	fmt.Printf("%.1f seconds inhale\n", float64(cycle.Inhale.Milliseconds())/1000)
-	if cycle.InhaleHold.Milliseconds() > 0 {
-		fmt.Printf("%.1f seconds hold\n", float64(cycle.InhaleHold.Milliseconds())/1000)
+// Draw the UI and kick off the breath cycles
+func RunBreatheCycles(title string, cycles []BreatheCycle) {
+	if err := ui.Init(); err != nil {
+		log.Fatalf("Failed to initialize TermUI: %v", err)
 	}
-	fmt.Printf("%.1f seconds exhale\n", float64(cycle.Exhale.Milliseconds())/1000)
-	if cycle.ExhaleHold.Milliseconds() > 0 {
-		fmt.Printf("%.1f seconds hold\n", float64(cycle.ExhaleHold.Milliseconds())/1000)
-	}
+	defer ui.Close()
 
-	fmt.Println("")
+	termWidth, termHeight := ui.TerminalDimensions()
 
-	time.Sleep(1 * time.Second)
+	gaugeChart := widgets.NewGauge()
+	gaugeChart.Title = fmt.Sprintf("%s (total duration: %s)", title, TotalDuration(cycles))
+	gaugeChart.SetRect(0, 0, termWidth, termHeight)
+	gaugeChart.Percent = 0
+	gaugeChart.BarColor = ui.ColorGreen
+	gaugeChart.BorderStyle.Fg = ui.ColorWhite
+	gaugeChart.TitleStyle.Fg = ui.ColorCyan
+	gaugeChart.Label = "Inhale"
 
-	for i := 0; i < cyclesCount; i++ {
-		fmt.Printf("Cycle %d of %d\n", i+1, cyclesCount)
-		RunBreatheCycle(cycle)
-		fmt.Println()
+	ui.Render(gaugeChart)
+
+	go runBreatheCycles(cycles, gaugeChart)
+
+	for e := range ui.PollEvents() {
+		if e.Type == ui.KeyboardEvent {
+			break
+		}
 	}
 }
 
-// Run a single breath cycle consisting of an inhale and an exhale step
-func RunBreatheCycle(cycle BreatheCycle) {
-	runBreatheSubCycle("Inhale", cycle.Inhale)
-	if cycle.InhaleHold.Milliseconds() > 0 {
-		runBreatheSubCycle("Hold", cycle.InhaleHold)
-	}
+// Run the breath cycles
+func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge) {
+	for _, cycle := range cycles {
+		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart)
+		if cycle.InhaleHold.Milliseconds() > 0 {
+			runBreatheSubCycle("Hold", cycle.InhaleHold, gaugeChart)
+		}
 
-	runBreatheSubCycle("Exhale", cycle.Exhale)
-	if cycle.ExhaleHold.Milliseconds() > 0 {
-		runBreatheSubCycle("Hold", cycle.ExhaleHold)
+		runBreatheSubCycle("Exhale", cycle.Exhale, gaugeChart)
+		if cycle.ExhaleHold.Milliseconds() > 0 {
+			runBreatheSubCycle("Hold", cycle.ExhaleHold, gaugeChart)
+		}
 	}
 }
 
 // Run a single breath sub cycle like an inhale or an exhale step
 // by waiting the appropriate time and printing information about
 // how long is still to go.
-func runBreatheSubCycle(startWord string, duration time.Duration) {
-	fmt.Printf("%s ", startWord)
+func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart *widgets.Gauge) {
+	gaugeChart.Label = fmt.Sprintf("%s for %.1f seconds", subCycleWord, float64(duration.Milliseconds())/1000)
+	switch subCycleWord {
+	case "Inhale":
+		gaugeChart.BarColor = ui.ColorGreen
+	case "Exhale":
+		gaugeChart.BarColor = ui.ColorBlue
+	case "Hold":
+		gaugeChart.BarColor = ui.ColorYellow
+	}
+	gaugeChart.Percent = 0
+	ui.Render(gaugeChart)
+
 	for i := int(duration.Milliseconds() / 100); i > 0; i-- {
 		time.Sleep(100 * time.Millisecond)
 
-		firstSecond := int(duration.Milliseconds()/100) - 10 - int(duration.Milliseconds()/100)%10 + 1
-		if i < firstSecond && i%10 == 0 {
-			fmt.Printf("%d ", i/10)
-		}
+		percentage := int(100 - float64(i)/float64(duration.Milliseconds()/100)*100)
+		gaugeChart.Percent = percentage
+		ui.Render(gaugeChart)
 	}
-	fmt.Println()
 }
 
 func TotalDuration(cycles []BreatheCycle) time.Duration {
