@@ -16,8 +16,11 @@ type BreatheCycle struct {
 
 // Display information about the breath cycles and run them
 func RunBreatheCycles(cycle BreatheCycle, cyclesCount int) {
-	totalDuration := time.Duration(cyclesCount*int((cycle.Inhale+cycle.InhaleHold+cycle.Exhale+cycle.ExhaleHold).Milliseconds())) * time.Millisecond
-	fmt.Printf("%d breathing cycles with a total duration of %s\n", cyclesCount, totalDuration)
+	var cycles = []BreatheCycle{}
+	for i := 0; i < cyclesCount; i++ {
+		cycles = append(cycles, cycle)
+	}
+	fmt.Printf("%d breathing cycles with a total duration of %s\n", cyclesCount, TotalDuration(cycles))
 
 	fmt.Println("Each cycle consists of:")
 	fmt.Printf("%.1f seconds inhale\n", float64(cycle.Inhale.Milliseconds())/1000)
@@ -34,14 +37,14 @@ func RunBreatheCycles(cycle BreatheCycle, cyclesCount int) {
 	time.Sleep(1 * time.Second)
 
 	for i := 0; i < cyclesCount; i++ {
-		fmt.Printf("Cycle %d of %d\n", i, cyclesCount)
-		runBreatheCycle(cycle)
+		fmt.Printf("Cycle %d of %d\n", i+1, cyclesCount)
+		RunBreatheCycle(cycle)
 		fmt.Println()
 	}
 }
 
 // Run a single breath cycle consisting of an inhale and an exhale step
-func runBreatheCycle(cycle BreatheCycle) {
+func RunBreatheCycle(cycle BreatheCycle) {
 	runBreatheSubCycle("Inhale", cycle.Inhale)
 	if cycle.InhaleHold.Milliseconds() > 0 {
 		runBreatheSubCycle("Hold", cycle.InhaleHold)
@@ -67,4 +70,16 @@ func runBreatheSubCycle(startWord string, duration time.Duration) {
 		}
 	}
 	fmt.Println()
+}
+
+func TotalDuration(cycles []BreatheCycle) time.Duration {
+	totalDurationMilliseconds := int64(0)
+	for _, cycle := range cycles {
+		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
+			cycle.InhaleHold.Milliseconds() +
+			cycle.Exhale.Milliseconds() +
+			cycle.ExhaleHold.Milliseconds()
+	}
+
+	return time.Duration(totalDurationMilliseconds) * time.Millisecond
 }
