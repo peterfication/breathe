@@ -32,6 +32,7 @@ your breath in between.`,
 				},
 				20,
 			),
+			rootCmd.PersistentFlags().Lookup("sound").Value.String(),
 		)
 	},
 }

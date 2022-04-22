@@ -5,9 +5,8 @@ Copyright © 2022 Peter Gundel <mail@petergundel.de>
 package cmd
 
 import (
-	"time"
-
 	"breathe/breathe"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -28,6 +27,7 @@ var idealCmd = &cobra.Command{
 				},
 				55,
 			),
+			rootCmd.PersistentFlags().Lookup("sound").Value.String(),
 		)
 	},
 }

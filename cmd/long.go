@@ -28,6 +28,7 @@ var longCmd = &cobra.Command{
 		breathe.RunBreatheCycles(
 			fmt.Sprintf("Long breathing training from %d seconds to %d seconds with %d cycles", inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
 			generateCycles(inhaleStartSeconds, inhaleEndSeconds, cyclesPerStartSeconds),
+			rootCmd.PersistentFlags().Lookup("sound").Value.String(),
 		)
 	},
 }

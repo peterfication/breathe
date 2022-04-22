@@ -30,7 +30,7 @@ func GenerateBreatheCycles(cycle BreatheCycle, cyclesCount int) (cycles []Breath
 }
 
 // Draw the UI and kick off the breath cycles
-func RunBreatheCycles(title string, cycles []BreatheCycle) {
+func RunBreatheCycles(title string, cycles []BreatheCycle, sound string) {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("Failed to initialize TermUI: %v", err)
 	}
@@ -39,7 +39,7 @@ func RunBreatheCycles(title string, cycles []BreatheCycle) {
 	gaugeChart := initGaugeChart()
 	textBox := initTextBox()
 	renderText := createRenderText(textBox, title, cycles)
-	playSound := initSpeaker()
+	playSound := initSpeaker(sound)
 
 	go runBreatheCycles(cycles, gaugeChart, renderText, playSound)
 
@@ -153,7 +153,7 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 
 // Returns a function to play the predefined sounds
 // by specifying the soundName
-func initSpeaker() func(soundName string) {
+func initSpeaker(sound string) func(soundName string) {
 	inhaleStreamer, format := initStreamer("inhale.mp3")
 	exhaleStreamer, _ := initStreamer("exhale.mp3")
 	holdStreamer, _ := initStreamer("hold.mp3")
@@ -170,43 +170,70 @@ func initSpeaker() func(soundName string) {
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
 	return func(soundName string) {
+		if sound == "none" {
+			return
+		}
 		switch soundName {
 		case "Inhale":
-			speaker.Play(inhaleStreamer)
-			defer inhaleStreamer.Seek(0)
+			if sound == "words" || sound == "all" {
+				speaker.Play(inhaleStreamer)
+				defer inhaleStreamer.Seek(0)
+			}
 		case "Exhale":
-			speaker.Play(exhaleStreamer)
-			defer exhaleStreamer.Seek(0)
+			if sound == "words" || sound == "all" {
+				speaker.Play(exhaleStreamer)
+				defer exhaleStreamer.Seek(0)
+			}
 		case "Hold":
-			speaker.Play(holdStreamer)
-			defer holdStreamer.Seek(0)
+			if sound == "words" || sound == "all" {
+				speaker.Play(holdStreamer)
+				defer holdStreamer.Seek(0)
+			}
 		case "1":
-			speaker.Play(oneStreamer)
-			defer oneStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(oneStreamer)
+				defer oneStreamer.Seek(0)
+			}
 		case "2":
-			speaker.Play(twoStreamer)
-			defer twoStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(twoStreamer)
+				defer twoStreamer.Seek(0)
+			}
 		case "3":
-			speaker.Play(threeStreamer)
-			defer threeStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(threeStreamer)
+				defer threeStreamer.Seek(0)
+			}
 		case "4":
-			speaker.Play(fourStreamer)
-			defer fourStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(fourStreamer)
+				defer fourStreamer.Seek(0)
+			}
 		case "5":
-			speaker.Play(fiveStreamer)
-			defer fiveStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(fiveStreamer)
+				defer fiveStreamer.Seek(0)
+			}
 		case "6":
-			speaker.Play(sixStreamer)
-			defer sixStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(sixStreamer)
+				defer sixStreamer.Seek(0)
+			}
 		case "7":
-			speaker.Play(sevenStreamer)
-			defer sevenStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(sevenStreamer)
+				defer sevenStreamer.Seek(0)
+			}
 		case "8":
-			speaker.Play(eightStreamer)
-			defer eightStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(eightStreamer)
+				defer eightStreamer.Seek(0)
+			}
 		case "9":
-			speaker.Play(nineStreamer)
-			defer nineStreamer.Seek(0)
+			if sound == "numbers" || sound == "all" {
+				speaker.Play(nineStreamer)
+				defer nineStreamer.Seek(0)
+			}
 		}
 	}
 }
