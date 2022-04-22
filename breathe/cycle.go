@@ -18,6 +18,8 @@ type BreathCycle struct {
 	ExhaleHold time.Duration
 }
 
+// Take one BreathCycle and create a slice of the same BreathCycles with
+// the cyclesCount of it.
 func GenerateBreathCycles(cycle BreathCycle, cyclesCount int) (cycles []BreathCycle) {
 	for i := 0; i < cyclesCount; i++ {
 		cycles = append(cycles, cycle)
@@ -123,12 +125,14 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 	switch subCycleWord {
 	case "Inhale":
 		gaugeChart.BarColor = ui.ColorGreen
+		gaugeChart.Percent = 0
 	case "Exhale":
 		gaugeChart.BarColor = ui.ColorBlue
+		gaugeChart.Percent = 100
 	case "Hold":
 		gaugeChart.BarColor = ui.ColorYellow
+		gaugeChart.Percent = 0
 	}
-	gaugeChart.Percent = 0
 	ui.Render(gaugeChart)
 
 	for i := int(duration.Milliseconds() / 100); i > 0; i-- {
@@ -142,6 +146,9 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 		}
 
 		percentage := int(100 - float64(i)/float64(duration.Milliseconds()/100)*100)
+		if subCycleWord == "Exhale" {
+			percentage = 100 - percentage
+		}
 		gaugeChart.Percent = percentage
 		ui.Render(gaugeChart)
 	}
