@@ -21,10 +21,10 @@ var boxLongCmd = &cobra.Command{
 It consists of 4 seconds inhale and 6 seconds exhale and 2 seconds holding
 your breath in between.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		breathe.RunBreatheCycles(
+		breathe.RunBreathCycles(
 			"Box breathe cycle (4-4-6-2)",
-			breathe.GenerateBreatheCycles(
-				breathe.BreatheCycle{
+			breathe.GenerateBreathCycles(
+				breathe.BreathCycle{
 					Inhale:     4000 * time.Millisecond,
 					InhaleHold: 4000 * time.Millisecond,
 					Exhale:     6000 * time.Millisecond,

@@ -9,16 +9,16 @@ import (
 	"github.com/gizak/termui/v3/widgets"
 )
 
-// A BreatheCycle represents full cycle of breathing consisting of
+// A BreathCycle represents full cycle of breathing consisting of
 // an inhale and an exhale
-type BreatheCycle struct {
+type BreathCycle struct {
 	Inhale     time.Duration
 	InhaleHold time.Duration
 	Exhale     time.Duration
 	ExhaleHold time.Duration
 }
 
-func GenerateBreatheCycles(cycle BreatheCycle, cyclesCount int) (cycles []BreatheCycle) {
+func GenerateBreathCycles(cycle BreathCycle, cyclesCount int) (cycles []BreathCycle) {
 	for i := 0; i < cyclesCount; i++ {
 		cycles = append(cycles, cycle)
 	}
@@ -26,7 +26,7 @@ func GenerateBreatheCycles(cycle BreatheCycle, cyclesCount int) (cycles []Breath
 }
 
 // Draw the UI and kick off the breath cycles
-func RunBreatheCycles(title string, cycles []BreatheCycle, sound string) {
+func RunBreathCycles(title string, cycles []BreathCycle, sound string) {
 	if err := ui.Init(); err != nil {
 		log.Fatalf("Failed to initialize TermUI: %v", err)
 	}
@@ -37,7 +37,7 @@ func RunBreatheCycles(title string, cycles []BreatheCycle, sound string) {
 	renderText := createRenderText(textBox, title, cycles)
 	playSound := initSpeaker(sound)
 
-	go runBreatheCycles(cycles, gaugeChart, renderText, playSound)
+	go runBreathCycles(cycles, gaugeChart, renderText, playSound)
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
@@ -72,7 +72,7 @@ func initTextBox() *widgets.Paragraph {
 }
 
 // The closure that refreshes the text box by re-rendering it
-func createRenderText(textBox *widgets.Paragraph, title string, cycles []BreatheCycle) func(currentCycleCount int) {
+func createRenderText(textBox *widgets.Paragraph, title string, cycles []BreathCycle) func(currentCycleCount int) {
 	return func(currentCycleCount int) {
 		text := fmt.Sprintf(`Always inhale through the nose!
 
@@ -86,7 +86,7 @@ Cycle %d of %d
 }
 
 // Sum up the duration of all steps in all cycles
-func totalDuration(cycles []BreatheCycle) time.Duration {
+func totalDuration(cycles []BreathCycle) time.Duration {
 	totalDurationMilliseconds := int64(0)
 	for _, cycle := range cycles {
 		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
@@ -99,7 +99,7 @@ func totalDuration(cycles []BreatheCycle) time.Duration {
 }
 
 // Run the breath cycles
-func runBreatheCycles(cycles []BreatheCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int), playSound func(soundName string)) {
+func runBreathCycles(cycles []BreathCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int), playSound func(soundName string)) {
 	for i, cycle := range cycles {
 		renderText(i + 1)
 		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart, playSound)

@@ -18,10 +18,10 @@ var idealCmd = &cobra.Command{
 	Long: `According to studies, the ideal way to breathe is inhale for
 5.5 seconds and exhale for 5.5 seconds.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		breathe.RunBreatheCycles(
+		breathe.RunBreathCycles(
 			"Ideal breath cycle: 5.5 seconds inhale and 5.5 seconds exhale",
-			breathe.GenerateBreatheCycles(
-				breathe.BreatheCycle{
+			breathe.GenerateBreathCycles(
+				breathe.BreathCycle{
 					Inhale: 5500 * time.Millisecond,
 					Exhale: 5500 * time.Millisecond,
 				},
