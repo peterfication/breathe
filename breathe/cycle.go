@@ -20,9 +20,9 @@ type BreathCycle struct {
 
 // Take one BreathCycle and create a slice of the same BreathCycles with
 // the cyclesCount of it.
-func GenerateBreathCycles(cycle BreathCycle, cyclesCount int) (breathCycles []BreathCycle) {
+func GenerateBreathCycles(breathCycle BreathCycle, cyclesCount int) (breathCycles []BreathCycle) {
 	for i := 0; i < cyclesCount; i++ {
-		breathCycles = append(breathCycles, cycle)
+		breathCycles = append(breathCycles, breathCycle)
 	}
 	return breathCycles
 }
@@ -121,11 +121,11 @@ Cycle %d of %d
 // Sum up the duration of all steps in all cycles
 func (runner *Runner) TotalDuration() time.Duration {
 	totalDurationMilliseconds := int64(0)
-	for _, cycle := range runner.breathCycles {
-		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
-			cycle.InhaleHold.Milliseconds() +
-			cycle.Exhale.Milliseconds() +
-			cycle.ExhaleHold.Milliseconds()
+	for _, breathCycle := range runner.breathCycles {
+		totalDurationMilliseconds += breathCycle.Inhale.Milliseconds() +
+			breathCycle.InhaleHold.Milliseconds() +
+			breathCycle.Exhale.Milliseconds() +
+			breathCycle.ExhaleHold.Milliseconds()
 	}
 
 	return time.Duration(totalDurationMilliseconds) * time.Millisecond
@@ -138,17 +138,17 @@ func (runner *Runner) BreathCyclesCount() int {
 
 // Run the breath cycles
 func (runner *Runner) RunBreathCycles() {
-	for i, cycle := range runner.breathCycles {
+	for i, breathCycle := range runner.breathCycles {
 		runner.currentCycleCount = i + 1
 		runner.RefreshText()
-		runBreatheSubCycle("Inhale", cycle.Inhale, runner.gaugeChart, runner.playSound)
-		if cycle.InhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.InhaleHold, runner.gaugeChart, runner.playSound)
+		runner.RunBreatheSubCycle("Inhale", breathCycle.Inhale)
+		if breathCycle.InhaleHold.Milliseconds() > 0 {
+			runner.RunBreatheSubCycle("Hold", breathCycle.InhaleHold)
 		}
 
-		runBreatheSubCycle("Exhale", cycle.Exhale, runner.gaugeChart, runner.playSound)
-		if cycle.ExhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.ExhaleHold, runner.gaugeChart, runner.playSound)
+		runner.RunBreatheSubCycle("Exhale", breathCycle.Exhale)
+		if breathCycle.ExhaleHold.Milliseconds() > 0 {
+			runner.RunBreatheSubCycle("Hold", breathCycle.ExhaleHold)
 		}
 	}
 }
@@ -156,21 +156,21 @@ func (runner *Runner) RunBreathCycles() {
 // Run a single breath sub cycle like an inhale or an exhale step
 // by waiting the appropriate time and printing information about
 // how long is still to go.
-func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart *widgets.Gauge, playSound func(soundName string)) {
-	gaugeChart.Label = fmt.Sprintf("%s for %.1f seconds", subCycleWord, float64(duration.Milliseconds())/1000)
-	playSound(subCycleWord)
+func (runner *Runner) RunBreatheSubCycle(subCycleWord string, duration time.Duration) {
+	runner.gaugeChart.Label = fmt.Sprintf("%s for %.1f seconds", subCycleWord, float64(duration.Milliseconds())/1000)
+	runner.playSound(subCycleWord)
 	switch subCycleWord {
 	case "Inhale":
-		gaugeChart.BarColor = ui.ColorGreen
-		gaugeChart.Percent = 0
+		runner.gaugeChart.BarColor = ui.ColorGreen
+		runner.gaugeChart.Percent = 0
 	case "Exhale":
-		gaugeChart.BarColor = ui.ColorBlue
-		gaugeChart.Percent = 100
+		runner.gaugeChart.BarColor = ui.ColorBlue
+		runner.gaugeChart.Percent = 100
 	case "Hold":
-		gaugeChart.BarColor = ui.ColorYellow
-		gaugeChart.Percent = 0
+		runner.gaugeChart.BarColor = ui.ColorYellow
+		runner.gaugeChart.Percent = 0
 	}
-	ui.Render(gaugeChart)
+	runner.Render()
 
 	for i := int(duration.Milliseconds() / 100); i > 0; i-- {
 		time.Sleep(100 * time.Millisecond)
@@ -179,14 +179,14 @@ func runBreatheSubCycle(subCycleWord string, duration time.Duration, gaugeChart 
 		// because the step word is played then
 		firstSecond := int(duration.Milliseconds()/100) - 10 - int(duration.Milliseconds()/100)%10 + 1
 		if i < firstSecond && i%10 == 0 {
-			playSound(fmt.Sprintf("%d", i/10))
+			runner.playSound(fmt.Sprintf("%d", i/10))
 		}
 
 		percentage := int(100 - float64(i)/float64(duration.Milliseconds()/100)*100)
 		if subCycleWord == "Exhale" {
 			percentage = 100 - percentage
 		}
-		gaugeChart.Percent = percentage
-		ui.Render(gaugeChart)
+		runner.gaugeChart.Percent = percentage
+		runner.Render()
 	}
 }
