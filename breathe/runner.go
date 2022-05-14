@@ -11,7 +11,6 @@ import (
 
 type Runner struct {
 	title string
-	sound string
 
 	breathCycles      []BreathCycle
 	currentCycleCount int
@@ -20,8 +19,7 @@ type Runner struct {
 	gaugeChart *widgets.Gauge
 	textBox    *widgets.Paragraph
 
-	// Closures
-	playSound func(soundName string)
+	speaker Speaker
 }
 
 func (runner *Runner) Init() {
@@ -31,7 +29,7 @@ func (runner *Runner) Init() {
 
 	runner.InitGaugeChart()
 	runner.InitTextBox()
-	runner.InitSpeaker(runner.sound)
+	runner.speaker.InitSpeaker()
 
 	runner.Render()
 }
@@ -52,7 +50,7 @@ func (runner *Runner) Close() {
 
 // Init the Runner, run it and close it afterwards
 func RunBreathCycles(title string, breathCycles []BreathCycle, sound string) {
-	runner := Runner{title: title, breathCycles: breathCycles, sound: sound}
+	runner := Runner{title: title, breathCycles: breathCycles, speaker: Speaker{sound: sound}}
 	runner.Init()
 	defer runner.Close()
 
@@ -140,7 +138,7 @@ func (runner *Runner) RunBreathCycles() {
 // how long is still to go.
 func (runner *Runner) RunBreatheSubCycle(subCycleWord string, duration time.Duration) {
 	runner.gaugeChart.Label = fmt.Sprintf("%s for %.1f seconds", subCycleWord, float64(duration.Milliseconds())/1000)
-	runner.playSound(subCycleWord)
+	runner.speaker.PlaySound(subCycleWord)
 	switch subCycleWord {
 	case "Inhale":
 		runner.gaugeChart.BarColor = ui.ColorGreen
@@ -161,7 +159,7 @@ func (runner *Runner) RunBreatheSubCycle(subCycleWord string, duration time.Dura
 		// because the step word is played then
 		firstSecond := int(duration.Milliseconds()/100) - 10 - int(duration.Milliseconds()/100)%10 + 1
 		if i < firstSecond && i%10 == 0 {
-			runner.playSound(fmt.Sprintf("%d", i/10))
+			runner.speaker.PlaySound(fmt.Sprintf("%d", i/10))
 		}
 
 		percentage := int(100 - float64(i)/float64(duration.Milliseconds()/100)*100)
