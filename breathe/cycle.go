@@ -113,15 +113,15 @@ func (runner *Runner) RefreshText() {
 %s
 Total duration: %s
 Cycle %d of %d
-`, runner.title, totalDuration(runner.breathCycles), runner.currentCycleCount, len(runner.breathCycles))
+`, runner.title, runner.TotalDuration(), runner.currentCycleCount, runner.BreathCyclesCount())
 	runner.textBox.Text = text
 	runner.Render()
 }
 
 // Sum up the duration of all steps in all cycles
-func totalDuration(breathCycles []BreathCycle) time.Duration {
+func (runner *Runner) TotalDuration() time.Duration {
 	totalDurationMilliseconds := int64(0)
-	for _, cycle := range breathCycles {
+	for _, cycle := range runner.breathCycles {
 		totalDurationMilliseconds += cycle.Inhale.Milliseconds() +
 			cycle.InhaleHold.Milliseconds() +
 			cycle.Exhale.Milliseconds() +
@@ -129,6 +129,11 @@ func totalDuration(breathCycles []BreathCycle) time.Duration {
 	}
 
 	return time.Duration(totalDurationMilliseconds) * time.Millisecond
+}
+
+// The total count of breath cycles
+func (runner *Runner) BreathCyclesCount() int {
+	return len(runner.breathCycles)
 }
 
 // Run the breath cycles
