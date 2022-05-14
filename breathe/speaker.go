@@ -31,6 +31,10 @@ type Speaker struct {
 // Returns a function to play the predefined sounds
 // by specifying the soundName
 func (speaker *Speaker) InitSpeaker() {
+	if speaker.sound == "none" {
+		return
+	}
+
 	speaker.inhaleStreamer, speaker.format = initStreamer("inhale.mp3")
 	speaker.exhaleStreamer, _ = initStreamer("exhale.mp3")
 	speaker.holdStreamer, _ = initStreamer("hold.mp3")
@@ -48,7 +52,6 @@ func (speaker *Speaker) InitSpeaker() {
 }
 
 func (speaker *Speaker) PlaySound(soundName string) {
-
 	if speaker.sound == "none" {
 		return
 	}
