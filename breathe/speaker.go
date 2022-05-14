@@ -30,9 +30,12 @@ type Speaker struct {
 
 // Returns a function to play the predefined sounds
 // by specifying the soundName
-func (speaker *Speaker) InitSpeaker() {
+func NewSpeaker(sound string) Speaker {
+	speaker := Speaker{sound: sound}
+
+	// Don't init the streamers, if there is no sound anyways
 	if speaker.sound == "none" {
-		return
+		return speaker
 	}
 
 	speaker.inhaleStreamer, speaker.format = initStreamer("inhale.mp3")
@@ -49,12 +52,15 @@ func (speaker *Speaker) InitSpeaker() {
 	speaker.nineStreamer, _ = initStreamer("9.mp3")
 
 	beepSpeaker.Init(speaker.format.SampleRate, speaker.format.SampleRate.N(time.Second/10))
+
+	return speaker
 }
 
 func (speaker *Speaker) PlaySound(soundName string) {
 	if speaker.sound == "none" {
 		return
 	}
+
 	switch soundName {
 	case "Inhale":
 		if speaker.sound == "words" || speaker.sound == "all" {

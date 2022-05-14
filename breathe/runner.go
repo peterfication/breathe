@@ -29,7 +29,6 @@ func (runner *Runner) Init() {
 
 	runner.InitGaugeChart()
 	runner.InitTextBox()
-	runner.speaker.InitSpeaker()
 
 	runner.Render()
 }
@@ -52,6 +51,7 @@ func (runner *Runner) Close() {
 func RunBreathCycles(title string, breathCycles []BreathCycle, sound string) {
 	runner := Runner{title: title, breathCycles: breathCycles, speaker: Speaker{sound: sound}}
 	runner.Init()
+	runner.speaker = NewSpeaker(sound)
 	defer runner.Close()
 
 	runner.Run()
