@@ -31,15 +31,15 @@ type Runner struct {
 	title string
 	sound string
 
-	breathCycles []BreathCycle
+	breathCycles      []BreathCycle
+	currentCycleCount int
 
 	// Widgets
 	gaugeChart *widgets.Gauge
 	textBox    *widgets.Paragraph
 
 	// Closures
-	renderText func(currentCycleCount int)
-	playSound  func(soundName string)
+	playSound func(soundName string)
 }
 
 func (runner *Runner) Init() {
@@ -47,14 +47,15 @@ func (runner *Runner) Init() {
 		log.Fatalf("Failed to initialize TermUI: %v", err)
 	}
 
-	runner.gaugeChart = initGaugeChart()
-	runner.textBox = initTextBox()
-	runner.renderText = createRenderText(runner.textBox, runner.title, runner.breathCycles)
-	runner.playSound = initSpeaker(runner.sound)
+	runner.InitGaugeChart()
+	runner.InitTextBox()
+	runner.InitSpeaker(runner.sound)
+
+	runner.Render()
 }
 
 func (runner *Runner) Run() {
-	go runBreathCycles(runner.breathCycles, runner.gaugeChart, runner.renderText, runner.playSound)
+	go runner.RunBreathCycles()
 
 	for e := range ui.PollEvents() {
 		if e.Type == ui.KeyboardEvent {
@@ -77,7 +78,7 @@ func RunBreathCycles(title string, breathCycles []BreathCycle, sound string) {
 }
 
 // The gauge chart that displays the breathing action to perform
-func initGaugeChart() *widgets.Gauge {
+func (runner *Runner) InitGaugeChart() {
 	termWidth, termHeight := ui.TerminalDimensions()
 	gaugeChart := widgets.NewGauge()
 	gaugeChart.SetRect(0, 0, termWidth, termHeight-10)
@@ -86,33 +87,35 @@ func initGaugeChart() *widgets.Gauge {
 	gaugeChart.BorderStyle.Fg = ui.ColorWhite
 	gaugeChart.TitleStyle.Fg = ui.ColorCyan
 
-	ui.Render(gaugeChart)
-	return gaugeChart
+	runner.gaugeChart = gaugeChart
 }
 
 // The text box that holds additional information about the breathing cycles
-func initTextBox() *widgets.Paragraph {
+func (runner *Runner) InitTextBox() {
 	termWidth, termHeight := ui.TerminalDimensions()
 	paragraph := widgets.NewParagraph()
 	paragraph.SetRect(0, termHeight-10, termWidth, termHeight)
 	paragraph.Text = "Breathe"
 
-	ui.Render(paragraph)
-	return paragraph
+	runner.textBox = paragraph
 }
 
-// The closure that refreshes the text box by re-rendering it
-func createRenderText(textBox *widgets.Paragraph, title string, breathCycles []BreathCycle) func(currentCycleCount int) {
-	return func(currentCycleCount int) {
-		text := fmt.Sprintf(`Always inhale through the nose!
+// Rerender the UI elements
+func (runner *Runner) Render() {
+	ui.Render(runner.gaugeChart)
+	ui.Render(runner.textBox)
+}
+
+// Update the text in the text box
+func (runner *Runner) RefreshText() {
+	text := fmt.Sprintf(`Always inhale through the nose!
 
 %s
 Total duration: %s
 Cycle %d of %d
-`, title, totalDuration(breathCycles), currentCycleCount, len(breathCycles))
-		textBox.Text = text
-		ui.Render(textBox)
-	}
+`, runner.title, totalDuration(runner.breathCycles), runner.currentCycleCount, len(runner.breathCycles))
+	runner.textBox.Text = text
+	runner.Render()
 }
 
 // Sum up the duration of all steps in all cycles
@@ -129,17 +132,18 @@ func totalDuration(breathCycles []BreathCycle) time.Duration {
 }
 
 // Run the breath cycles
-func runBreathCycles(breathCycles []BreathCycle, gaugeChart *widgets.Gauge, renderText func(currentCycleCount int), playSound func(soundName string)) {
-	for i, cycle := range breathCycles {
-		renderText(i + 1)
-		runBreatheSubCycle("Inhale", cycle.Inhale, gaugeChart, playSound)
+func (runner *Runner) RunBreathCycles() {
+	for i, cycle := range runner.breathCycles {
+		runner.currentCycleCount = i + 1
+		runner.RefreshText()
+		runBreatheSubCycle("Inhale", cycle.Inhale, runner.gaugeChart, runner.playSound)
 		if cycle.InhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.InhaleHold, gaugeChart, playSound)
+			runBreatheSubCycle("Hold", cycle.InhaleHold, runner.gaugeChart, runner.playSound)
 		}
 
-		runBreatheSubCycle("Exhale", cycle.Exhale, gaugeChart, playSound)
+		runBreatheSubCycle("Exhale", cycle.Exhale, runner.gaugeChart, runner.playSound)
 		if cycle.ExhaleHold.Milliseconds() > 0 {
-			runBreatheSubCycle("Hold", cycle.ExhaleHold, gaugeChart, playSound)
+			runBreatheSubCycle("Hold", cycle.ExhaleHold, runner.gaugeChart, runner.playSound)
 		}
 	}
 }

@@ -13,7 +13,7 @@ import (
 
 // Returns a function to play the predefined sounds
 // by specifying the soundName
-func initSpeaker(sound string) func(soundName string) {
+func (runner *Runner) InitSpeaker(sound string) {
 	inhaleStreamer, format := initStreamer("inhale.mp3")
 	exhaleStreamer, _ := initStreamer("exhale.mp3")
 	holdStreamer, _ := initStreamer("hold.mp3")
@@ -29,7 +29,7 @@ func initSpeaker(sound string) func(soundName string) {
 
 	speaker.Init(format.SampleRate, format.SampleRate.N(time.Second/10))
 
-	return func(soundName string) {
+	runner.playSound = func(soundName string) {
 		if sound == "none" {
 			return
 		}
